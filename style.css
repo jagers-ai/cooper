@@ -47,7 +47,8 @@ label {
   font-size: 0.9rem;
 }
 
-input[type="number"] {
+input[type="number"],
+input[type="text"] {
   padding: 6px 8px;
   border-radius: 6px;
   border: 1px solid #334155;
@@ -55,7 +56,8 @@ input[type="number"] {
   color: #e5e7eb;
 }
 
-input[type="number"]:focus {
+input[type="number"]:focus,
+input[type="text"]:focus {
   outline: none;
   border-color: #38bdf8;
   box-shadow: 0 0 0 1px #38bdf8;
