@@ -128,6 +128,7 @@
 - 사용자가 현재 입력값 세트를 이름과 함께 저장할 수 있다.
   - 예: "2025-03 시세", "A업체 기준" 등.
 - 저장된 프리셋 목록에서 하나를 선택하면, 모든 입력값이 해당 프리셋 값으로 일괄 변경된다.
+- 프리셋 목록에서 개별 프리셋을 선택해 삭제할 수 있는 삭제 기능(버튼 또는 메뉴)을 제공한다.
 - 저장소는 브라우저 `localStorage`를 사용하며, 데이터는 로컬 브라우저에만 저장된다.
 
 ---
@@ -146,16 +147,17 @@
 
 - 다음 작업이 순서대로 실행되도록 한다.
   1. 프로젝트 디렉터리로 이동: `/home/jinsan/projects/cooper`.
-  2. TypeScript 빌드 실행: `tsc` 또는 `npm run build`.
-  3. 빌드된 `index.html`을 브라우저에서 연다.
+  2. TypeScript 개발용 watch 모드 실행: `tsc --watch` 또는 `npm run dev`.
+  3. 개발 서버 또는 빌드된 `index.html`을 브라우저에서 연다.
 
 #### 5.2 예상 구현 개요
 
 - `~/.bashrc` 또는 별도 쉘 설정 파일에 alias 추가:
   - `cd /home/jinsan/projects/cooper`.
-  - TypeScript 빌드 명령 실행:
-    - 예: `npm run build` 또는 `npx tsc`.
-  - 결과 HTML 파일을 브라우저로 열기:
+  - TypeScript watch 모드 실행:
+    - 예: `npx tsc --watch` 또는 `npm run dev`.
+    - 이 명령은 개발 중 내내 실행 상태를 유지하며, `.ts` 파일이 변경될 때마다 자동으로 JS를 다시 생성한다.
+  - 개발 서버가 없다면, 결과 HTML 파일을 브라우저로 열기:
     - WSL 환경에 맞는 명령 사용:
       - 예: `wslview index.html`, `explorer.exe index.html`, `xdg-open index.html` 중 환경에 맞는 것을 선택.
 
@@ -179,4 +181,3 @@
 - 브랜치:
   - 예시: `feat/scrap-calculator-spec`.
   - 이 브랜치에서 본 문서(CALCULATOR_SPEC.md) 추가 및 README 정리 후 PR 생성.
-
