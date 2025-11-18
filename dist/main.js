@@ -7,18 +7,46 @@ function readNumberInput(id) {
     const value = parseFloat(raw);
     return Number.isFinite(value) ? value : 0;
 }
+function countDigits(text) {
+    return text.replace(/[^\d]/g, '').length;
+}
+function calculateCaretPosition(formatted, digitsLeftOfCaret) {
+    var _a;
+    if (!Number.isFinite(digitsLeftOfCaret) || digitsLeftOfCaret <= 0) {
+        return 0;
+    }
+    let digitsSeen = 0;
+    for (let i = 0; i < formatted.length; i += 1) {
+        const char = (_a = formatted[i]) !== null && _a !== void 0 ? _a : '';
+        if (/\d/.test(char)) {
+            digitsSeen += 1;
+        }
+        if (digitsSeen >= digitsLeftOfCaret) {
+            return i + 1;
+        }
+    }
+    return formatted.length;
+}
 function formatCurrencyInputElement(el) {
-    const digitsOnly = el.value.replace(/[^\d]/g, '');
+    var _a;
+    const rawValue = el.value;
+    const digitsOnly = rawValue.replace(/[^\d]/g, '');
+    const digitsLeftOfCaret = countDigits(rawValue.slice(0, (_a = el.selectionStart) !== null && _a !== void 0 ? _a : rawValue.length));
     if (digitsOnly === '') {
         el.value = '';
         return;
     }
-    const numeric = parseInt(digitsOnly, 10);
+    const numeric = Number(digitsOnly);
     if (!Number.isFinite(numeric)) {
         el.value = '';
         return;
     }
-    el.value = numberFormatter.format(numeric);
+    const formatted = numberFormatter.format(numeric);
+    el.value = formatted;
+    if (document.activeElement === el) {
+        const newCaretPosition = calculateCaretPosition(formatted, digitsLeftOfCaret);
+        el.setSelectionRange(newCaretPosition, newCaretPosition);
+    }
 }
 function readInputs() {
     return {
