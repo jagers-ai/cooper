@@ -8,7 +8,56 @@
   </head>
   <body>
     <main class="app">
-      <h1>폐모터 수익 계산기 v1</h1>
+      <header class="app-header">
+        <h1>폐모터 수익 계산기 v1</h1>
+        <div class="preset-controls">
+          <label class="preset-label">
+            프리셋
+            <select id="presetSelect"></select>
+          </label>
+          <input id="presetName" type="text" placeholder="새 프리셋 이름" />
+          <button id="presetSaveButton" type="button">저장</button>
+          <button id="presetDeleteButton" type="button">삭제</button>
+          <button id="resetDefaultsButton" type="button">기본값 초기화</button>
+        </div>
+      </header>
+
+      <section class="panel">
+        <h2>결과 요약</h2>
+        <div class="summary-grid">
+          <div class="card">
+            <h3>월 기준</h3>
+            <p>총매출: <span id="monthlyRevenue">0</span> 원</p>
+            <p>매출이익(인건비 전): <span id="monthlyGrossProfit">0</span> 원</p>
+            <p>순이익: <span id="monthlyNetProfit">0</span> 원</p>
+            <p>순이익률: <span id="monthlyProfitMargin">계산 불가</span></p>
+          </div>
+          <div class="card">
+            <h3>연 기준</h3>
+            <p>총매출: <span id="yearlyRevenue">0</span> 원</p>
+            <p>매출이익(인건비 전): <span id="yearlyGrossProfit">0</span> 원</p>
+            <p>순이익: <span id="yearlyNetProfit">0</span> 원</p>
+          </div>
+        </div>
+        <p class="break-even">
+          손익분기점 폐모터 매입 단가:
+          <span id="breakEvenMotorPrice">계산 불가</span>
+          원/kg
+        </p>
+        <p class="break-even">
+          손익분기점 알루미늄 모터 비율:
+          <span id="breakEvenAluminumMotorRatio">계산 불가</span>
+        </p>
+        <p class="break-even">
+          손익분기점 구리 수율:
+          <span id="breakEvenCopperYield">계산 불가</span>
+        </p>
+        <p class="break-even">
+          손익분기점 구리 판매 단가:
+          <span id="breakEvenCopperPrice">계산 불가</span>
+          원/kg
+        </p>
+      </section>
 
       <section class="panel">
         <h2>기본 설정</h2>
@@ -30,6 +79,16 @@
               inputmode="decimal"
               value="700"
             />
+            <div class="slider-row">
+              <input
+              id="motorPriceSlider"
+              type="range"
+                min="100"
+                max="1500"
+                step="10"
+              />
+              <span class="slider-value" id="motorPriceSliderValue"></span>
+            </div>
           </label>
           <label>
             구리 판매 단가 (원/kg)
@@ -65,6 +124,16 @@
           <label>
             알루미늄 모터 비율 (%)
             <input id="aluminumRatioPercent" type="number" min="0" max="100" step="0.1" value="10" />
+            <div class="slider-row">
+              <input
+                id="aluminumRatioSlider"
+                type="range"
+                min="0"
+                max="30"
+                step="1"
+              />
+              <span class="slider-value" id="aluminumRatioSliderValue"></span>
+            </div>
           </label>
         </div>
       </section>
@@ -81,24 +150,6 @@
               placeholder="예: 2,000,000"
             />
           </label>
-        </div>
-      </section>
-
-      <section class="panel">
-        <h2>결과 요약</h2>
-        <div class="summary-grid">
-          <div class="card">
-            <h3>월 기준</h3>
-            <p>총매출: <span id="monthlyRevenue">0</span> 원</p>
-            <p>매출이익(인건비 전): <span id="monthlyGrossProfit">0</span> 원</p>
-            <p>순이익: <span id="monthlyNetProfit">0</span> 원</p>
-          </div>
-          <div class="card">
-            <h3>연 기준</h3>
-            <p>총매출: <span id="yearlyRevenue">0</span> 원</p>
-            <p>매출이익(인건비 전): <span id="yearlyGrossProfit">0</span> 원</p>
-            <p>순이익: <span id="yearlyNetProfit">0</span> 원</p>
-          </div>
         </div>
       </section>
 
