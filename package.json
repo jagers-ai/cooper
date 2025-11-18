@@ -1,0 +1,23 @@
+{
+  "name": "cooper",
+  "version": "1.0.0",
+  "description": "폐모터 수익 계산기 (HTML/CSS/TypeScript)",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jagers-ai/cooper.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jagers-ai/cooper/issues"
+  },
+  "homepage": "https://github.com/jagers-ai/cooper#readme",
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}
