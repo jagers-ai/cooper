@@ -139,6 +139,46 @@
       </section>
 
       <section class="panel">
+        <h2>민감도 / 탄력도 분석</h2>
+        <table class="sensitivity-table">
+          <thead>
+            <tr>
+              <th>변수</th>
+              <th>변화</th>
+              <th>순이익 변화(원)</th>
+              <th>순이익 변화율(%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>폐모터 매입 단가</th>
+              <td>+1%</td>
+              <td><span id="sensMotorPriceDeltaProfit">-</span></td>
+              <td><span id="sensMotorPriceDeltaProfitPercent">-</span></td>
+            </tr>
+            <tr>
+              <th>알루미늄 모터 비율</th>
+              <td>+1%p</td>
+              <td><span id="sensAlRatioDeltaProfit">-</span></td>
+              <td><span id="sensAlRatioDeltaProfitPercent">-</span></td>
+            </tr>
+            <tr>
+              <th>구리 수율</th>
+              <td>+1%p</td>
+              <td><span id="sensCuYieldDeltaProfit">-</span></td>
+              <td><span id="sensCuYieldDeltaProfitPercent">-</span></td>
+            </tr>
+            <tr>
+              <th>구리 판매 단가</th>
+              <td>+1%</td>
+              <td><span id="sensCuPriceDeltaProfit">-</span></td>
+              <td><span id="sensCuPriceDeltaProfitPercent">-</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel">
         <h2>비용 설정</h2>
         <div class="form-grid">
           <label>
