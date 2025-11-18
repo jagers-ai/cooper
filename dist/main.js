@@ -3,8 +3,22 @@ function readNumberInput(id) {
     const el = document.getElementById(id);
     if (!el)
         return 0;
-    const value = parseFloat(el.value.replace(/,/g, ''));
+    const raw = el.value.replace(/,/g, '');
+    const value = parseFloat(raw);
     return Number.isFinite(value) ? value : 0;
+}
+function formatCurrencyInputElement(el) {
+    const digitsOnly = el.value.replace(/[^\d]/g, '');
+    if (digitsOnly === '') {
+        el.value = '';
+        return;
+    }
+    const numeric = parseInt(digitsOnly, 10);
+    if (!Number.isFinite(numeric)) {
+        el.value = '';
+        return;
+    }
+    el.value = numberFormatter.format(numeric);
 }
 function readInputs() {
     return {
@@ -115,6 +129,14 @@ function recalculate() {
     updateView(result);
 }
 function setup() {
+    const currencyIds = [
+        'monthlyInvestment',
+        'motorPricePerKg',
+        'copperPricePerKg',
+        'ironPricePerKg',
+        'aluminumPricePerKg',
+        'monthlyLaborCost',
+    ];
     const inputIds = [
         'monthlyInvestment',
         'motorPricePerKg',
@@ -129,7 +151,16 @@ function setup() {
         const el = document.getElementById(id);
         if (!el)
             return;
-        el.addEventListener('input', recalculate);
+        if (currencyIds.includes(id)) {
+            el.addEventListener('input', () => {
+                formatCurrencyInputElement(el);
+                recalculate();
+            });
+            formatCurrencyInputElement(el);
+        }
+        else {
+            el.addEventListener('input', recalculate);
+        }
     });
     recalculate();
 }
