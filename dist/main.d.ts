@@ -29,7 +29,15 @@ interface CalculationResult {
     breakEvenAluminumMotorRatioPercent: number | null;
     breakEvenCopperYieldPercent: number | null;
     breakEvenCopperPricePerKg: number | null;
+    sensitivities?: SensitivityEntry[];
     validationMessage: string;
+}
+interface SensitivityEntry {
+    variable: 'motorPricePerKg' | 'aluminumRatioPercent' | 'copperYieldPercent' | 'copperPricePerKg';
+    label: string;
+    deltaLabel: string;
+    deltaProfit: number | null;
+    deltaProfitPercent: number | null;
 }
 declare function readNumberInput(id: string): number;
 declare function countDigits(text: string): number;
@@ -41,6 +49,7 @@ declare function calculateBreakEvenMotorPrice(inputs: Inputs): number | null;
 declare function calculateBreakEvenAluminumMotorRatio(inputs: Inputs): number | null;
 declare function calculateBreakEvenCopperYield(inputs: Inputs): number | null;
 declare function calculateBreakEvenCopperPrice(inputs: Inputs): number | null;
+declare function computeSensitivities(inputs: Inputs, baseResult: CalculationResult): SensitivityEntry[];
 declare function readInputs(): Inputs;
 declare function calculate(inputs: Inputs): CalculationResult;
 declare function setText(id: string, value: string): void;

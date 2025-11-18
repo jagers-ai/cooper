@@ -31,7 +31,16 @@ interface CalculationResult {
   breakEvenAluminumMotorRatioPercent: number | null;
   breakEvenCopperYieldPercent: number | null;
   breakEvenCopperPricePerKg: number | null;
+  sensitivities?: SensitivityEntry[];
   validationMessage: string;
+}
+
+interface SensitivityEntry {
+  variable: 'motorPricePerKg' | 'aluminumRatioPercent' | 'copperYieldPercent' | 'copperPricePerKg';
+  label: string;
+  deltaLabel: string;
+  deltaProfit: number | null;
+  deltaProfitPercent: number | null;
 }
 
 function readNumberInput(id: string): number {
@@ -320,6 +329,104 @@ function calculateBreakEvenCopperPrice(inputs: Inputs): number | null {
   return Pc;
 }
 
+function computeSensitivities(
+  inputs: Inputs,
+  baseResult: CalculationResult,
+): SensitivityEntry[] {
+  const baseProfit = baseResult.monthlyNetProfit;
+  const hasBaseProfit = Number.isFinite(baseProfit ?? NaN) && baseProfit !== 0;
+
+  const entries: SensitivityEntry[] = [];
+
+  const pmBase = inputs.motorPricePerKg;
+  let pmEntry: SensitivityEntry = {
+    variable: 'motorPricePerKg',
+    label: '폐모터 매입 단가',
+    deltaLabel: '+1%',
+    deltaProfit: null,
+    deltaProfitPercent: null,
+  };
+  if (Number.isFinite(pmBase) && pmBase > 0 && Number.isFinite(baseProfit ?? NaN)) {
+    const pmNew = pmBase * 1.01;
+    const newInputs: Inputs = { ...inputs, motorPricePerKg: pmNew };
+    const newResult = calculate(newInputs);
+    const deltaProfit = newResult.monthlyNetProfit - baseResult.monthlyNetProfit;
+    pmEntry.deltaProfit = deltaProfit;
+    if (hasBaseProfit) {
+      const deltaPct = (deltaProfit / (baseProfit as number)) * 100;
+      pmEntry.deltaProfitPercent = deltaPct;
+    }
+  }
+  entries.push(pmEntry);
+
+  const alBase = inputs.aluminumRatioPercent;
+  let alEntry: SensitivityEntry = {
+    variable: 'aluminumRatioPercent',
+    label: '알루미늄 모터 비율',
+    deltaLabel: '+1%p',
+    deltaProfit: null,
+    deltaProfitPercent: null,
+  };
+  if (Number.isFinite(alBase) && Number.isFinite(baseProfit ?? NaN)) {
+    let alNew = alBase + 1;
+    if (alNew > 100) alNew = 100;
+    const newInputs: Inputs = { ...inputs, aluminumRatioPercent: alNew };
+    const newResult = calculate(newInputs);
+    const deltaProfit = newResult.monthlyNetProfit - baseResult.monthlyNetProfit;
+    alEntry.deltaProfit = deltaProfit;
+    if (hasBaseProfit) {
+      const deltaPct = (deltaProfit / (baseProfit as number)) * 100;
+      alEntry.deltaProfitPercent = deltaPct;
+    }
+  }
+  entries.push(alEntry);
+
+  const cuYieldBase = inputs.copperYieldPercent;
+  let cuYieldEntry: SensitivityEntry = {
+    variable: 'copperYieldPercent',
+    label: '구리 수율',
+    deltaLabel: '+1%p',
+    deltaProfit: null,
+    deltaProfitPercent: null,
+  };
+  if (Number.isFinite(cuYieldBase) && Number.isFinite(baseProfit ?? NaN)) {
+    let cuNew = cuYieldBase + 1;
+    if (cuNew > 100) cuNew = 100;
+    const newInputs: Inputs = { ...inputs, copperYieldPercent: cuNew };
+    const newResult = calculate(newInputs);
+    const deltaProfit = newResult.monthlyNetProfit - baseResult.monthlyNetProfit;
+    cuYieldEntry.deltaProfit = deltaProfit;
+    if (hasBaseProfit) {
+      const deltaPct = (deltaProfit / (baseProfit as number)) * 100;
+      cuYieldEntry.deltaProfitPercent = deltaPct;
+    }
+  }
+  entries.push(cuYieldEntry);
+
+  const cuPriceBase = inputs.copperPricePerKg;
+  let cuPriceEntry: SensitivityEntry = {
+    variable: 'copperPricePerKg',
+    label: '구리 판매 단가',
+    deltaLabel: '+1%',
+    deltaProfit: null,
+    deltaProfitPercent: null,
+  };
+  if (Number.isFinite(cuPriceBase) && cuPriceBase > 0 && Number.isFinite(baseProfit ?? NaN)) {
+    const cuNew = cuPriceBase * 1.01;
+    const newInputs: Inputs = { ...inputs, copperPricePerKg: cuNew };
+    const newResult = calculate(newInputs);
+    const deltaProfit = newResult.monthlyNetProfit - baseResult.monthlyNetProfit;
+    cuPriceEntry.deltaProfit = deltaProfit;
+    if (hasBaseProfit) {
+      const deltaPct = (deltaProfit / (baseProfit as number)) * 100;
+      cuPriceEntry.deltaProfitPercent = deltaPct;
+    }
+  }
+  entries.push(cuPriceEntry);
+
+  return entries;
+}
+
 function readInputs(): Inputs {
   return {
     monthlyInvestment: readNumberInput('monthlyInvestment'),
@@ -493,6 +600,51 @@ function updateView(result: CalculationResult): void {
     : '계산 불가';
   setText('breakEvenCopperPrice', breakEvenCopperPriceText);
 
+  const sensitivities = result.sensitivities ?? [];
+
+  const motorPriceSens = sensitivities.find((s) => s.variable === 'motorPricePerKg');
+  const alRatioSens = sensitivities.find((s) => s.variable === 'aluminumRatioPercent');
+  const cuYieldSens = sensitivities.find((s) => s.variable === 'copperYieldPercent');
+  const cuPriceSens = sensitivities.find((s) => s.variable === 'copperPricePerKg');
+
+  const formatSigned = (value: number | null): string => {
+    if (!Number.isFinite(value ?? NaN)) return '계산 불가';
+    const v = Math.round(value as number);
+    if (v === 0) return '0';
+    const sign = v > 0 ? '+' : '-';
+    const abs = Math.abs(v);
+    return `${sign}${numberFormatter.format(abs)}`;
+  };
+
+  const formatSignedPercent = (value: number | null): string => {
+    if (!Number.isFinite(value ?? NaN)) return '계산 불가';
+    const v = value as number;
+    if (Math.abs(v) < 0.05) return '0.0';
+    const sign = v > 0 ? '+' : v < 0 ? '-' : '';
+    const abs = Math.abs(v);
+    return `${sign}${abs.toFixed(1)}`;
+  };
+
+  const setSensitivityRow = (prefix: string, entry: SensitivityEntry | undefined): void => {
+    if (!entry) {
+      setText(`sens${prefix}DeltaProfit`, '-');
+      setText(`sens${prefix}DeltaProfitPercent`, '-');
+      return;
+    }
+    setText(`sens${prefix}DeltaProfit`, formatSigned(entry.deltaProfit));
+    setText(
+      `sens${prefix}DeltaProfitPercent`,
+      entry.deltaProfitPercent != null
+        ? `${formatSignedPercent(entry.deltaProfitPercent)}`
+        : '계산 불가',
+    );
+  };
+
+  setSensitivityRow('MotorPrice', motorPriceSens);
+  setSensitivityRow('AlRatio', alRatioSens);
+  setSensitivityRow('CuYield', cuYieldSens);
+  setSensitivityRow('CuPrice', cuPriceSens);
+
   setText('totalWeight', formatNumber(result.totalWeightKg));
   setText('copperWeight', formatNumber(result.copperWeightKg));
   setText('aluminumWeight', formatNumber(result.aluminumWeightKg));
@@ -510,8 +662,13 @@ function updateView(result: CalculationResult): void {
 
 function recalculate(): void {
   const inputs = readInputs();
-  const result = calculate(inputs);
-  updateView(result);
+  const baseResult = calculate(inputs);
+  const sensitivities = computeSensitivities(inputs, baseResult);
+  const resultWithSensitivities: CalculationResult = {
+    ...baseResult,
+    sensitivities,
+  };
+  updateView(resultWithSensitivities);
 }
 
 function setup(): void {

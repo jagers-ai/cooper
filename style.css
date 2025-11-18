@@ -184,3 +184,24 @@ input[type="range"] {
   font-size: 0.8rem;
   color: #f97316;
 }
+
+.sensitivity-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.sensitivity-table th,
+.sensitivity-table td {
+  padding: 6px 4px;
+}
+
+.sensitivity-table thead th {
+  text-align: left;
+  color: #9ca3af;
+  border-bottom: 1px solid #1f2937;
+}
+
+.sensitivity-table tbody tr:nth-child(even) {
+  background: rgba(15, 23, 42, 0.7);
+}
