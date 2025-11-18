@@ -1,4 +1,5 @@
 declare const numberFormatter: Intl.NumberFormat;
+declare const ALUMINUM_YIELD = 0.1;
 interface Inputs {
     monthlyInvestment: number;
     motorPricePerKg: number;
@@ -23,6 +24,11 @@ interface CalculationResult {
     yearlyRevenue: number;
     yearlyGrossProfit: number;
     yearlyNetProfit: number;
+    monthlyProfitMarginPercent: number | null;
+    breakEvenMotorPricePerKg: number | null;
+    breakEvenAluminumMotorRatioPercent: number | null;
+    breakEvenCopperYieldPercent: number | null;
+    breakEvenCopperPricePerKg: number | null;
     validationMessage: string;
 }
 declare function readNumberInput(id: string): number;
@@ -30,6 +36,11 @@ declare function countDigits(text: string): number;
 declare function calculateCaretPosition(formatted: string, digitsLeftOfCaret: number): number;
 declare function formatCurrencyInputElement(el: HTMLInputElement): void;
 declare function handleCurrencyInput(el: HTMLInputElement): void;
+declare function applyInputsToDom(values: Inputs): void;
+declare function calculateBreakEvenMotorPrice(inputs: Inputs): number | null;
+declare function calculateBreakEvenAluminumMotorRatio(inputs: Inputs): number | null;
+declare function calculateBreakEvenCopperYield(inputs: Inputs): number | null;
+declare function calculateBreakEvenCopperPrice(inputs: Inputs): number | null;
 declare function readInputs(): Inputs;
 declare function calculate(inputs: Inputs): CalculationResult;
 declare function setText(id: string, value: string): void;

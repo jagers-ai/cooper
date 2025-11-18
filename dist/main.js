@@ -1,5 +1,6 @@
 "use strict";
 const numberFormatter = new Intl.NumberFormat('ko-KR');
+const ALUMINUM_YIELD = 0.1;
 function readNumberInput(id) {
     const el = document.getElementById(id);
     if (!el)
@@ -53,6 +54,161 @@ function handleCurrencyInput(el) {
     formatCurrencyInputElement(el);
     recalculate();
 }
+function applyInputsToDom(values) {
+    const setCurrency = (id, amount) => {
+        const el = document.getElementById(id);
+        if (!el)
+            return;
+        if (!Number.isFinite(amount)) {
+            el.value = '';
+            return;
+        }
+        el.value = numberFormatter.format(Math.round(amount));
+    };
+    const setNumber = (id, value) => {
+        const el = document.getElementById(id);
+        if (!el)
+            return;
+        el.value = Number.isFinite(value) ? String(value) : '';
+    };
+    setCurrency('monthlyInvestment', values.monthlyInvestment);
+    setCurrency('motorPricePerKg', values.motorPricePerKg);
+    setCurrency('copperPricePerKg', values.copperPricePerKg);
+    setCurrency('ironPricePerKg', values.ironPricePerKg);
+    setCurrency('aluminumPricePerKg', values.aluminumPricePerKg);
+    setCurrency('monthlyLaborCost', values.monthlyLaborCost);
+    setNumber('copperYieldPercent', values.copperYieldPercent);
+    setNumber('aluminumRatioPercent', values.aluminumRatioPercent);
+}
+function calculateBreakEvenMotorPrice(inputs) {
+    const { monthlyInvestment, monthlyLaborCost, copperPricePerKg, ironPricePerKg, aluminumPricePerKg, copperYieldPercent, aluminumRatioPercent, } = inputs;
+    if (!Number.isFinite(monthlyInvestment) || monthlyInvestment <= 0) {
+        return null;
+    }
+    let copperYield = copperYieldPercent / 100;
+    let aluminumMotorRatio = aluminumRatioPercent / 100;
+    if (!Number.isFinite(copperYield) || copperYield < 0)
+        copperYield = 0;
+    if (copperYield > 1)
+        copperYield = 1;
+    if (!Number.isFinite(aluminumMotorRatio) || aluminumMotorRatio < 0)
+        aluminumMotorRatio = 0;
+    if (aluminumMotorRatio > 1)
+        aluminumMotorRatio = 1;
+    const copperMotorRatio = 1 - aluminumMotorRatio;
+    const copperWirePerKg = copperMotorRatio * copperYield;
+    const aluminumWirePerKg = aluminumMotorRatio * ALUMINUM_YIELD;
+    const ironPerKg = copperMotorRatio * (1 - copperYield) + aluminumMotorRatio * (1 - ALUMINUM_YIELD);
+    const k = copperWirePerKg * copperPricePerKg +
+        aluminumWirePerKg * aluminumPricePerKg +
+        ironPerKg * ironPricePerKg;
+    if (!Number.isFinite(k) || k <= 0) {
+        return null;
+    }
+    const denominator = monthlyInvestment + monthlyLaborCost;
+    if (!Number.isFinite(denominator) || denominator <= 0) {
+        return null;
+    }
+    return (k * monthlyInvestment) / denominator;
+}
+function calculateBreakEvenAluminumMotorRatio(inputs) {
+    const { monthlyInvestment, monthlyLaborCost, motorPricePerKg, copperPricePerKg, ironPricePerKg, aluminumPricePerKg, copperYieldPercent, } = inputs;
+    if (!Number.isFinite(monthlyInvestment) ||
+        monthlyInvestment <= 0 ||
+        !Number.isFinite(motorPricePerKg) ||
+        motorPricePerKg <= 0) {
+        return null;
+    }
+    const M = monthlyInvestment / motorPricePerKg;
+    const targetK = (monthlyInvestment + monthlyLaborCost) / M;
+    let copperYield = copperYieldPercent / 100;
+    if (!Number.isFinite(copperYield) || copperYield < 0)
+        copperYield = 0;
+    if (copperYield > 1)
+        copperYield = 1;
+    const c = copperYield;
+    const Pc = copperPricePerKg;
+    const Pa = aluminumPricePerKg;
+    const Pi = ironPricePerKg;
+    const k0 = c * Pc + (1 - c) * Pi;
+    const k1 = c * (Pi - Pc) + ALUMINUM_YIELD * (Pa - Pi);
+    if (!Number.isFinite(k1) || k1 === 0) {
+        return null;
+    }
+    const r = (targetK - k0) / k1;
+    if (!Number.isFinite(r) || r < 0 || r > 1) {
+        return null;
+    }
+    return r;
+}
+function calculateBreakEvenCopperYield(inputs) {
+    const { monthlyInvestment, monthlyLaborCost, motorPricePerKg, copperPricePerKg, ironPricePerKg, aluminumPricePerKg, aluminumRatioPercent, } = inputs;
+    if (!Number.isFinite(monthlyInvestment) ||
+        monthlyInvestment <= 0 ||
+        !Number.isFinite(motorPricePerKg) ||
+        motorPricePerKg <= 0) {
+        return null;
+    }
+    const M = monthlyInvestment / motorPricePerKg;
+    const targetK = (monthlyInvestment + monthlyLaborCost) / M;
+    let aluminumMotorRatio = aluminumRatioPercent / 100;
+    if (!Number.isFinite(aluminumMotorRatio) || aluminumMotorRatio < 0)
+        aluminumMotorRatio = 0;
+    if (aluminumMotorRatio > 1)
+        aluminumMotorRatio = 1;
+    const r = aluminumMotorRatio;
+    const Pc = copperPricePerKg;
+    const Pa = aluminumPricePerKg;
+    const Pi = ironPricePerKg;
+    const k0 = (1 - r * ALUMINUM_YIELD) * Pi + r * ALUMINUM_YIELD * Pa;
+    const k1 = (1 - r) * (Pc - Pi);
+    if (!Number.isFinite(k1) || k1 === 0) {
+        return null;
+    }
+    const c = (targetK - k0) / k1;
+    if (!Number.isFinite(c) || c < 0 || c > 1) {
+        return null;
+    }
+    return c;
+}
+function calculateBreakEvenCopperPrice(inputs) {
+    const { monthlyInvestment, monthlyLaborCost, motorPricePerKg, ironPricePerKg, aluminumPricePerKg, copperYieldPercent, aluminumRatioPercent, } = inputs;
+    if (!Number.isFinite(monthlyInvestment) ||
+        monthlyInvestment <= 0 ||
+        !Number.isFinite(motorPricePerKg) ||
+        motorPricePerKg <= 0) {
+        return null;
+    }
+    const M = monthlyInvestment / motorPricePerKg;
+    const targetK = (monthlyInvestment + monthlyLaborCost) / M;
+    let copperYield = copperYieldPercent / 100;
+    let aluminumMotorRatio = aluminumRatioPercent / 100;
+    if (!Number.isFinite(copperYield) || copperYield < 0)
+        copperYield = 0;
+    if (copperYield > 1)
+        copperYield = 1;
+    if (!Number.isFinite(aluminumMotorRatio) || aluminumMotorRatio < 0)
+        aluminumMotorRatio = 0;
+    if (aluminumMotorRatio > 1)
+        aluminumMotorRatio = 1;
+    const r = aluminumMotorRatio;
+    const c = copperYield;
+    const Pa = aluminumPricePerKg;
+    const Pi = ironPricePerKg;
+    const copperMotorRatio = 1 - r;
+    const copperWirePerKg = copperMotorRatio * c;
+    const aluminumWirePerKg = r * ALUMINUM_YIELD;
+    const ironPerKg = copperMotorRatio * (1 - c) + r * (1 - ALUMINUM_YIELD);
+    if (!Number.isFinite(copperWirePerKg) || copperWirePerKg <= 0) {
+        return null;
+    }
+    const kConst = aluminumWirePerKg * Pa + ironPerKg * Pi;
+    const Pc = (targetK - kConst) / copperWirePerKg;
+    if (!Number.isFinite(Pc) || Pc <= 0) {
+        return null;
+    }
+    return Pc;
+}
 function readInputs() {
     return {
         monthlyInvestment: readNumberInput('monthlyInvestment'),
@@ -83,22 +239,36 @@ function calculate(inputs) {
             yearlyRevenue: 0,
             yearlyGrossProfit: 0,
             yearlyNetProfit: 0,
+            monthlyProfitMarginPercent: null,
+            breakEvenMotorPricePerKg: null,
+            breakEvenAluminumMotorRatioPercent: null,
+            breakEvenCopperYieldPercent: null,
+            breakEvenCopperPricePerKg: null,
             validationMessage: '폐모터 매입 단가는 0보다 커야 합니다.',
         };
     }
     const totalWeightKg = monthlyInvestment / motorPricePerKg;
-    const copperYield = copperYieldPercent / 100;
-    const aluminumRatio = aluminumRatioPercent / 100;
-    if (copperYield < 0 || aluminumRatio < 0) {
-        validationMessage = '수율과 비율은 0 이상이어야 합니다.';
+    let copperYield = copperYieldPercent / 100;
+    let aluminumMotorRatio = aluminumRatioPercent / 100;
+    if (copperYield < 0 || copperYield > 1 || aluminumMotorRatio < 0 || aluminumMotorRatio > 1) {
+        validationMessage = '구리 수율과 알루미늄 모터 비율은 0~100% 사이여야 합니다.';
     }
-    if (copperYield + aluminumRatio > 1) {
-        validationMessage =
-            '구리 수율과 알루미늄 모터 비율의 합이 100%를 초과했습니다. 값들을 다시 확인해주세요.';
-    }
-    const copperWeightKg = totalWeightKg * Math.max(copperYield, 0);
-    const aluminumWeightKg = totalWeightKg * Math.max(aluminumRatio, 0);
-    const ironWeightRaw = totalWeightKg - copperWeightKg - aluminumWeightKg;
+    if (!Number.isFinite(copperYield) || copperYield < 0)
+        copperYield = 0;
+    if (copperYield > 1)
+        copperYield = 1;
+    if (!Number.isFinite(aluminumMotorRatio) || aluminumMotorRatio < 0)
+        aluminumMotorRatio = 0;
+    if (aluminumMotorRatio > 1)
+        aluminumMotorRatio = 1;
+    const copperMotorRatio = 1 - aluminumMotorRatio;
+    const copperMotorWeightKg = totalWeightKg * copperMotorRatio;
+    const aluminumMotorWeightKg = totalWeightKg * aluminumMotorRatio;
+    const copperWeightKg = copperMotorWeightKg * copperYield;
+    const aluminumWeightKg = aluminumMotorWeightKg * ALUMINUM_YIELD;
+    const ironFromCopperMotorsKg = copperMotorWeightKg - copperWeightKg;
+    const ironFromAluminumMotorsKg = aluminumMotorWeightKg - aluminumWeightKg;
+    const ironWeightRaw = ironFromCopperMotorsKg + ironFromAluminumMotorsKg;
     const ironWeightKg = ironWeightRaw > 0 ? ironWeightRaw : 0;
     const copperRevenue = copperWeightKg * copperPricePerKg;
     const aluminumRevenue = aluminumWeightKg * aluminumPricePerKg;
@@ -109,6 +279,11 @@ function calculate(inputs) {
     const yearlyRevenue = monthlyRevenue * 12;
     const yearlyGrossProfit = monthlyGrossProfit * 12;
     const yearlyNetProfit = monthlyNetProfit * 12;
+    const breakEvenMotorPricePerKg = calculateBreakEvenMotorPrice(inputs);
+    const breakEvenAluminumMotorRatio = calculateBreakEvenAluminumMotorRatio(inputs);
+    const breakEvenCopperYield = calculateBreakEvenCopperYield(inputs);
+    const breakEvenCopperPricePerKg = calculateBreakEvenCopperPrice(inputs);
+    const monthlyProfitMarginPercent = monthlyRevenue > 0 ? (monthlyNetProfit / monthlyRevenue) * 100 : null;
     return {
         totalWeightKg,
         copperWeightKg,
@@ -123,6 +298,15 @@ function calculate(inputs) {
         yearlyRevenue,
         yearlyGrossProfit,
         yearlyNetProfit,
+        monthlyProfitMarginPercent,
+        breakEvenMotorPricePerKg,
+        breakEvenAluminumMotorRatioPercent: Number.isFinite(breakEvenAluminumMotorRatio !== null && breakEvenAluminumMotorRatio !== void 0 ? breakEvenAluminumMotorRatio : NaN)
+            ? breakEvenAluminumMotorRatio * 100
+            : null,
+        breakEvenCopperYieldPercent: Number.isFinite(breakEvenCopperYield !== null && breakEvenCopperYield !== void 0 ? breakEvenCopperYield : NaN)
+            ? breakEvenCopperYield * 100
+            : null,
+        breakEvenCopperPricePerKg,
         validationMessage,
     };
 }
@@ -138,12 +322,33 @@ function formatNumber(value) {
     return numberFormatter.format(Math.round(value));
 }
 function updateView(result) {
+    var _a, _b, _c, _d, _e;
     setText('monthlyRevenue', formatNumber(result.monthlyRevenue));
     setText('monthlyGrossProfit', formatNumber(result.monthlyGrossProfit));
     setText('monthlyNetProfit', formatNumber(result.monthlyNetProfit));
+    const profitMarginText = Number.isFinite((_a = result.monthlyProfitMarginPercent) !== null && _a !== void 0 ? _a : NaN)
+        ? `${result.monthlyProfitMarginPercent.toFixed(1)} %`
+        : '계산 불가';
+    setText('monthlyProfitMargin', profitMarginText);
     setText('yearlyRevenue', formatNumber(result.yearlyRevenue));
     setText('yearlyGrossProfit', formatNumber(result.yearlyGrossProfit));
     setText('yearlyNetProfit', formatNumber(result.yearlyNetProfit));
+    const breakEvenText = Number.isFinite((_b = result.breakEvenMotorPricePerKg) !== null && _b !== void 0 ? _b : NaN)
+        ? formatNumber(result.breakEvenMotorPricePerKg)
+        : '계산 불가';
+    setText('breakEvenMotorPrice', breakEvenText);
+    const breakEvenAlRatioText = Number.isFinite((_c = result.breakEvenAluminumMotorRatioPercent) !== null && _c !== void 0 ? _c : NaN)
+        ? `${result.breakEvenAluminumMotorRatioPercent.toFixed(1)} %`
+        : '계산 불가';
+    setText('breakEvenAluminumMotorRatio', breakEvenAlRatioText);
+    const breakEvenCopperYieldText = Number.isFinite((_d = result.breakEvenCopperYieldPercent) !== null && _d !== void 0 ? _d : NaN)
+        ? `${result.breakEvenCopperYieldPercent.toFixed(1)} %`
+        : '계산 불가';
+    setText('breakEvenCopperYield', breakEvenCopperYieldText);
+    const breakEvenCopperPriceText = Number.isFinite((_e = result.breakEvenCopperPricePerKg) !== null && _e !== void 0 ? _e : NaN)
+        ? formatNumber(result.breakEvenCopperPricePerKg)
+        : '계산 불가';
+    setText('breakEvenCopperPrice', breakEvenCopperPriceText);
     setText('totalWeight', formatNumber(result.totalWeightKg));
     setText('copperWeight', formatNumber(result.copperWeightKg));
     setText('aluminumWeight', formatNumber(result.aluminumWeightKg));
@@ -195,6 +400,194 @@ function setup() {
             el.addEventListener('input', recalculate);
         }
     });
+    const motorPriceSlider = document.getElementById('motorPriceSlider');
+    const motorPriceSliderValue = document.getElementById('motorPriceSliderValue');
+    const aluminumRatioSlider = document.getElementById('aluminumRatioSlider');
+    const aluminumRatioSliderValue = document.getElementById('aluminumRatioSliderValue');
+    const syncSlidersFromInputs = () => {
+        const motorPrice = readNumberInput('motorPricePerKg');
+        if (motorPriceSlider && motorPriceSliderValue) {
+            const min = Number(motorPriceSlider.min) || 0;
+            const max = Number(motorPriceSlider.max) || 0;
+            let value = motorPrice;
+            if (!Number.isFinite(value) || value <= 0) {
+                value = min || 0;
+            }
+            if (max > min) {
+                value = Math.min(max, Math.max(min, value));
+            }
+            motorPriceSlider.value = String(Math.round(value));
+            motorPriceSliderValue.textContent = `${formatNumber(value)} 원/kg`;
+        }
+        const aluminumRatio = readNumberInput('aluminumRatioPercent');
+        if (aluminumRatioSlider && aluminumRatioSliderValue) {
+            const min = Number(aluminumRatioSlider.min) || 0;
+            const max = Number(aluminumRatioSlider.max) || 100;
+            let value = aluminumRatio;
+            if (!Number.isFinite(value) || value < 0) {
+                value = min;
+            }
+            if (max > min) {
+                value = Math.min(max, Math.max(min, value));
+            }
+            aluminumRatioSlider.value = String(Math.round(value));
+            aluminumRatioSliderValue.textContent = `${value.toFixed(1)} %`;
+        }
+    };
+    if (motorPriceSlider) {
+        motorPriceSlider.addEventListener('input', () => {
+            const value = Number(motorPriceSlider.value);
+            const input = document.getElementById('motorPricePerKg');
+            if (input) {
+                input.value = String(value);
+                formatCurrencyInputElement(input);
+            }
+            if (motorPriceSliderValue) {
+                motorPriceSliderValue.textContent = `${formatNumber(value)} 원/kg`;
+            }
+            recalculate();
+        });
+    }
+    if (aluminumRatioSlider) {
+        aluminumRatioSlider.addEventListener('input', () => {
+            const value = Number(aluminumRatioSlider.value);
+            const input = document.getElementById('aluminumRatioPercent');
+            if (input) {
+                input.value = value.toFixed(1);
+            }
+            if (aluminumRatioSliderValue) {
+                aluminumRatioSliderValue.textContent = `${value.toFixed(1)} %`;
+            }
+            recalculate();
+        });
+    }
+    const DEFAULT_INPUTS = {
+        monthlyInvestment: 0,
+        motorPricePerKg: 700,
+        copperPricePerKg: 12000,
+        ironPricePerKg: 400,
+        aluminumPricePerKg: 2000,
+        copperYieldPercent: 10,
+        aluminumRatioPercent: 10,
+        monthlyLaborCost: 0,
+    };
+    const DEFAULT_PRESET_NAME = '기본 시나리오';
+    const PRESET_STORAGE_KEY = 'scrapCalculatorPresets';
+    const loadPresets = () => {
+        try {
+            const raw = localStorage.getItem(PRESET_STORAGE_KEY);
+            if (!raw)
+                return [];
+            const parsed = JSON.parse(raw);
+            if (!Array.isArray(parsed))
+                return [];
+            return parsed;
+        }
+        catch (_a) {
+            return [];
+        }
+    };
+    const savePresets = (presets) => {
+        try {
+            localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(presets));
+        }
+        catch (_a) {
+            // ignore
+        }
+    };
+    const ensureDefaultPreset = (presets) => {
+        const hasDefault = presets.some((p) => p.name === DEFAULT_PRESET_NAME);
+        if (!hasDefault) {
+            return [{ name: DEFAULT_PRESET_NAME, values: DEFAULT_INPUTS }, ...presets];
+        }
+        return presets;
+    };
+    const presetSelect = document.getElementById('presetSelect');
+    const presetNameInput = document.getElementById('presetName');
+    const presetSaveButton = document.getElementById('presetSaveButton');
+    const presetDeleteButton = document.getElementById('presetDeleteButton');
+    const resetDefaultsButton = document.getElementById('resetDefaultsButton');
+    let presets = ensureDefaultPreset(loadPresets());
+    let currentPresetName = DEFAULT_PRESET_NAME;
+    const renderPresetOptions = () => {
+        if (!presetSelect)
+            return;
+        presetSelect.innerHTML = '';
+        presets.forEach((preset) => {
+            const option = document.createElement('option');
+            option.value = preset.name;
+            option.textContent = preset.name;
+            if (preset.name === currentPresetName) {
+                option.selected = true;
+            }
+            presetSelect.appendChild(option);
+        });
+    };
+    const updatePresetDeleteState = () => {
+        if (!presetDeleteButton)
+            return;
+        presetDeleteButton.disabled = currentPresetName === DEFAULT_PRESET_NAME;
+    };
+    renderPresetOptions();
+    updatePresetDeleteState();
+    if (presetSelect) {
+        presetSelect.addEventListener('change', () => {
+            const selectedName = presetSelect.value;
+            currentPresetName = selectedName;
+            const preset = presets.find((p) => p.name === selectedName);
+            if (preset) {
+                applyInputsToDom(preset.values);
+                syncSlidersFromInputs();
+                recalculate();
+            }
+            updatePresetDeleteState();
+        });
+    }
+    if (presetSaveButton) {
+        presetSaveButton.addEventListener('click', () => {
+            var _a;
+            const name = (_a = ((presetNameInput === null || presetNameInput === void 0 ? void 0 : presetNameInput.value.trim()) || DEFAULT_PRESET_NAME)) !== null && _a !== void 0 ? _a : DEFAULT_PRESET_NAME;
+            const values = readInputs();
+            const existingIndex = presets.findIndex((p) => p.name === name);
+            if (existingIndex >= 0) {
+                presets[existingIndex] = { name, values };
+            }
+            else {
+                presets.push({ name, values });
+            }
+            currentPresetName = name;
+            presets = ensureDefaultPreset(presets);
+            savePresets(presets);
+            renderPresetOptions();
+            updatePresetDeleteState();
+        });
+    }
+    if (presetDeleteButton) {
+        presetDeleteButton.addEventListener('click', () => {
+            if (currentPresetName === DEFAULT_PRESET_NAME)
+                return;
+            presets = presets.filter((p) => p.name !== currentPresetName);
+            presets = ensureDefaultPreset(presets);
+            currentPresetName = DEFAULT_PRESET_NAME;
+            savePresets(presets);
+            renderPresetOptions();
+            applyInputsToDom(DEFAULT_INPUTS);
+            syncSlidersFromInputs();
+            recalculate();
+            updatePresetDeleteState();
+        });
+    }
+    if (resetDefaultsButton) {
+        resetDefaultsButton.addEventListener('click', () => {
+            applyInputsToDom(DEFAULT_INPUTS);
+            syncSlidersFromInputs();
+            recalculate();
+            currentPresetName = DEFAULT_PRESET_NAME;
+            renderPresetOptions();
+            updatePresetDeleteState();
+        });
+    }
+    syncSlidersFromInputs();
     recalculate();
 }
 if (document.readyState === 'loading') {
