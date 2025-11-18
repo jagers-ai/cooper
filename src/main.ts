@@ -82,6 +82,11 @@ function formatCurrencyInputElement(el: HTMLInputElement): void {
   }
 }
 
+function handleCurrencyInput(el: HTMLInputElement): void {
+  formatCurrencyInputElement(el);
+  recalculate();
+}
+
 function readInputs(): Inputs {
   return {
     monthlyInvestment: readNumberInput('monthlyInvestment'),
@@ -244,9 +249,9 @@ function setup(): void {
     const el = document.getElementById(id) as HTMLInputElement | null;
     if (!el) return;
     if (currencyIds.includes(id)) {
-      el.addEventListener('input', () => {
-        formatCurrencyInputElement(el);
-        recalculate();
+      const handler = () => handleCurrencyInput(el);
+      ['input', 'change', 'blur', 'keyup'].forEach((eventName) => {
+        el.addEventListener(eventName, handler);
       });
       formatCurrencyInputElement(el);
     } else {

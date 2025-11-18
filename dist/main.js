@@ -1,3 +1,4 @@
+"use strict";
 const numberFormatter = new Intl.NumberFormat('ko-KR');
 function readNumberInput(id) {
     const el = document.getElementById(id);
@@ -47,6 +48,10 @@ function formatCurrencyInputElement(el) {
         const newCaretPosition = calculateCaretPosition(formatted, digitsLeftOfCaret);
         el.setSelectionRange(newCaretPosition, newCaretPosition);
     }
+}
+function handleCurrencyInput(el) {
+    formatCurrencyInputElement(el);
+    recalculate();
 }
 function readInputs() {
     return {
@@ -180,9 +185,9 @@ function setup() {
         if (!el)
             return;
         if (currencyIds.includes(id)) {
-            el.addEventListener('input', () => {
-                formatCurrencyInputElement(el);
-                recalculate();
+            const handler = () => handleCurrencyInput(el);
+            ['input', 'change', 'blur', 'keyup'].forEach((eventName) => {
+                el.addEventListener(eventName, handler);
             });
             formatCurrencyInputElement(el);
         }
@@ -198,5 +203,4 @@ if (document.readyState === 'loading') {
 else {
     setup();
 }
-export {};
 //# sourceMappingURL=main.js.map
