@@ -13,6 +13,8 @@ interface Inputs {
 interface CalculationResult {
     totalWeightKg: number;
     copperWeightKg: number;
+    yearlyTotalWeightKg: number;
+    yearlyCopperWeightKg: number;
     aluminumWeightKg: number;
     ironWeightKg: number;
     copperRevenue: number;

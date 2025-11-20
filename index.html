@@ -31,12 +31,16 @@
             <p>매출이익(인건비 전): <span id="monthlyGrossProfit">0</span> 원</p>
             <p>순이익: <span id="monthlyNetProfit">0</span> 원</p>
             <p>순이익률: <span id="monthlyProfitMargin">계산 불가</span></p>
+            <p>총 폐모터 중량: <span id="monthlyTotalWeight">0</span> kg</p>
+            <p>총 구리 중량: <span id="monthlyCopperWeight">0</span> kg</p>
           </div>
           <div class="card">
             <h3>연 기준</h3>
             <p>총매출: <span id="yearlyRevenue">0</span> 원</p>
             <p>매출이익(인건비 전): <span id="yearlyGrossProfit">0</span> 원</p>
             <p>순이익: <span id="yearlyNetProfit">0</span> 원</p>
+            <p>총 폐모터 중량: <span id="yearlyTotalWeight">0</span> kg</p>
+            <p>총 구리 중량: <span id="yearlyCopperWeight">0</span> kg</p>
           </div>
         </div>
         <p class="break-even">
@@ -139,6 +143,46 @@
       </section>
 
       <section class="panel">
+        <h2>상세 내역</h2>
+        <table class="details-table">
+          <tbody>
+            <tr>
+              <th>총 폐모터 중량</th>
+              <td><span id="totalWeight">0</span> kg</td>
+            </tr>
+            <tr>
+              <th>구리 중량 / 매출</th>
+              <td><span id="copperWeight">0</span> kg / <span id="copperRevenue">0</span> 원</td>
+            </tr>
+            <tr>
+              <th>알루미늄 중량 / 매출</th>
+              <td><span id="aluminumWeight">0</span> kg / <span id="aluminumRevenue">0</span> 원</td>
+            </tr>
+            <tr>
+              <th>철 중량 / 매출</th>
+              <td><span id="ironWeight">0</span> kg / <span id="ironRevenue">0</span> 원</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="note" id="validationMessage"></p>
+      </section>
+
+      <section class="panel">
+        <h2>비용 설정</h2>
+        <div class="form-grid">
+          <label>
+            월 인건비 (원)
+            <input
+              id="monthlyLaborCost"
+              type="text"
+              inputmode="decimal"
+              placeholder="예: 2,000,000"
+            />
+          </label>
+        </div>
+      </section>
+
+      <section class="panel">
         <h2>민감도 / 탄력도 분석</h2>
         <table class="sensitivity-table">
           <thead>
@@ -176,46 +220,6 @@
             </tr>
           </tbody>
         </table>
-      </section>
-
-      <section class="panel">
-        <h2>비용 설정</h2>
-        <div class="form-grid">
-          <label>
-            월 인건비 (원)
-            <input
-              id="monthlyLaborCost"
-              type="text"
-              inputmode="decimal"
-              placeholder="예: 2,000,000"
-            />
-          </label>
-        </div>
-      </section>
-
-      <section class="panel">
-        <h2>상세 내역</h2>
-        <table class="details-table">
-          <tbody>
-            <tr>
-              <th>총 폐모터 중량</th>
-              <td><span id="totalWeight">0</span> kg</td>
-            </tr>
-            <tr>
-              <th>구리 중량 / 매출</th>
-              <td><span id="copperWeight">0</span> kg / <span id="copperRevenue">0</span> 원</td>
-            </tr>
-            <tr>
-              <th>알루미늄 중량 / 매출</th>
-              <td><span id="aluminumWeight">0</span> kg / <span id="aluminumRevenue">0</span> 원</td>
-            </tr>
-            <tr>
-              <th>철 중량 / 매출</th>
-              <td><span id="ironWeight">0</span> kg / <span id="ironRevenue">0</span> 원</td>
-            </tr>
-          </tbody>
-        </table>
-        <p class="note" id="validationMessage"></p>
       </section>
     </main>
 

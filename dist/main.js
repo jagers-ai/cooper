@@ -318,6 +318,8 @@ function calculate(inputs) {
         return {
             totalWeightKg: 0,
             copperWeightKg: 0,
+            yearlyTotalWeightKg: 0,
+            yearlyCopperWeightKg: 0,
             aluminumWeightKg: 0,
             ironWeightKg: 0,
             copperRevenue: 0,
@@ -366,6 +368,8 @@ function calculate(inputs) {
     const monthlyRevenue = copperRevenue + aluminumRevenue + ironRevenue;
     const monthlyGrossProfit = monthlyRevenue - monthlyInvestment;
     const monthlyNetProfit = monthlyGrossProfit - monthlyLaborCost;
+    const yearlyTotalWeightKg = totalWeightKg * 12;
+    const yearlyCopperWeightKg = copperWeightKg * 12;
     const yearlyRevenue = monthlyRevenue * 12;
     const yearlyGrossProfit = monthlyGrossProfit * 12;
     const yearlyNetProfit = monthlyNetProfit * 12;
@@ -377,6 +381,8 @@ function calculate(inputs) {
     return {
         totalWeightKg,
         copperWeightKg,
+        yearlyTotalWeightKg,
+        yearlyCopperWeightKg,
         aluminumWeightKg,
         ironWeightKg,
         copperRevenue,
@@ -420,9 +426,13 @@ function updateView(result) {
         ? `${result.monthlyProfitMarginPercent.toFixed(1)} %`
         : '계산 불가';
     setText('monthlyProfitMargin', profitMarginText);
+    setText('monthlyTotalWeight', formatNumber(result.totalWeightKg));
+    setText('monthlyCopperWeight', formatNumber(result.copperWeightKg));
     setText('yearlyRevenue', formatNumber(result.yearlyRevenue));
     setText('yearlyGrossProfit', formatNumber(result.yearlyGrossProfit));
     setText('yearlyNetProfit', formatNumber(result.yearlyNetProfit));
+    setText('yearlyTotalWeight', formatNumber(result.yearlyTotalWeightKg));
+    setText('yearlyCopperWeight', formatNumber(result.yearlyCopperWeightKg));
     const breakEvenText = Number.isFinite((_b = result.breakEvenMotorPricePerKg) !== null && _b !== void 0 ? _b : NaN)
         ? formatNumber(result.breakEvenMotorPricePerKg)
         : '계산 불가';
